@@ -42,11 +42,15 @@ void merge(int a[], int p, int q, int r){
     }
     // leftovers
     while (left_index <= q) {
-        a[i++] = copy_arr[left_index++];
+        a[i] = copy_arr[left_index];
+        left_index++;
+        i++;
     }
 
     while (right_index <= r) {
-        a[i++] = copy_arr[right_index++];
+        a[i] = copy_arr[right_index];
+        right_index++;
+        i++;
     }
     return;
 
