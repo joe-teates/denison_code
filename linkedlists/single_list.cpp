@@ -8,6 +8,7 @@ using namespace std;
 
 Node* listSearch(MyList& list, int& key) {
 // listSearch iterates through a linked list for a particular node by checking the key property
+// list must be a valid linked list, will return a nullptr if no node is found
     // Gets node to start from
     Node* current_node = list.head;
     // Check if the key matches, if not jump to next key and repeat until at end of list
@@ -19,6 +20,7 @@ Node* listSearch(MyList& list, int& key) {
 
 void listPrepend(MyList& list, Node& node) {
 // listPrepend adds a node at the start of a list, shifting any existing elements one index to the right/back
+// list must be a valid linked list and node must be a valid node that is not already in the list
     // set next pointer of new node
     node.next = list.head;
     // update the list head
@@ -28,6 +30,7 @@ void listPrepend(MyList& list, Node& node) {
 
 void listInsert(Node& node_x, Node& node_y) {
 // This function adds a new node (node_x) to the list directly after node_y
+// node_x and node_y must be valid nodes 
     // set next pointer of new node
     node_x.next = node_y.next;
     // update node_y's next pointer
@@ -38,6 +41,7 @@ void listInsert(Node& node_x, Node& node_y) {
 void listDelete(MyList& list, Node& node) {
 // This function deletes a node (node) from the list. It does this by iterating through the list to 
 // find the desired node and the previous node and updates those accordingly
+// list must be a valid singly linked list and node must be a node in the list
     // get node to start from
     Node* current_node = list.head;
     Node* last_node = nullptr;
@@ -46,9 +50,15 @@ void listDelete(MyList& list, Node& node) {
     while(current_node != nullptr && !found_node) {
         if (current_node->key == node.key) {
             // found the node to delete, update next property of previous node to skip over the node
-            last_node->next = current_node->next;
+            if (last_node == nullptr) {
+                // node was at head
+                list.head = current_node->next;
+            } else {
+                // normal case
+                last_node->next = current_node->next;
+            }
             // deallocate
-            delete &node;
+            delete current_node;
             // end loop
             found_node = true;
         }

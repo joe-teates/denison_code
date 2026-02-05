@@ -7,6 +7,7 @@ using namespace std;
 
 Node* listSearch(MyList& list, int& key) {
 // listSearch iterates through a linked list for a particular node by checking the key property
+// list must be a valid doubly linked list, will return a nullptr if no node is found
     // Gets node to start from
     Node* current_node = list.head;
     // Check if the key matches, if not jump to next key and repeat until at end of list
@@ -19,6 +20,8 @@ Node* listSearch(MyList& list, int& key) {
 
 void listPrepend(MyList& list, Node& node) {
 // listPrepend adds a node at the start of a list, shifting any existing elements one index to the right/back
+// list must be a valid doubly linked list and node must be a valid node that is not already in the list
+
     // set next and prev pointers of new node
     node.next = list.head;
     node.prev = nullptr;
@@ -33,6 +36,8 @@ void listPrepend(MyList& list, Node& node) {
 
 void listInsert(Node& node_x, Node& node_y) {
 // This function adds a new node (node_x) to the list directly after node_y
+// node_x and node_y must be valid doubly linked nodes 
+
     // set next and prev pointers of new node
     node_x.next = node_y.next;
     node_x.prev = &node_y;
@@ -47,6 +52,7 @@ void listInsert(Node& node_x, Node& node_y) {
 
 void listDelete(MyList& list, Node& node) {
 // This function deletes a node (node) from the list
+// list must be a valid doubly linked list and node must be a node in the list
     // if an element exists before node, make it's next skip over this node
     if (node.prev != nullptr) {
         node.prev->next = node.next;
