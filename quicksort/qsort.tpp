@@ -13,11 +13,11 @@ using namespace std;
 
 template<typename V>
 Pair partition(Item<V> a[], int p, int r) {
-// This function choses two items (pivots) to break up the given list into 3 parts based on the item's keys
-// the first part from index 0 to i_Low consists of elements less than the lowest pivot
+// This function choses two items (pivots) to break up the given list into 3 parts based on the item's keys, Postcondition:
+// the first part from index p to i_Low consists of elements less than the lowest pivot
 // the second (i_Low+2 to i_High) and third part (i_High+2 to r) contain elements between 
 // the two and elements greater than both respectively. This function modifies the list in 
-// place and then returns the indices of each pivot.
+// place and then returns the indices of each pivot. Precondition, a is a valid list of Items with valid integer keys 
     // get pivot values
     int pivot_high = a[r].key;
     int pivot_low = a[r-1].key;
@@ -65,6 +65,7 @@ Pair partition(Item<V> a[], int p, int r) {
         Item<V> temp = a[r-1];
         a[r-1] = a[i_Low+1];
         a[i_Low+1] = temp;
+        i_High++;
 
         temp = a[r];
         a[r] = a[i_Low+2];
