@@ -1,6 +1,5 @@
 // Joe Teates, Theo Wolf
 // Testing file for checking accuracy of all methods of hashtable class
-
 #include "hashtable.hpp"
 #include <iostream>
 using namespace std;
@@ -24,7 +23,7 @@ int main () {
     ht.hashDelete(2);
     ht.printTable();
 
-    cout<<ht.hashSearch(12)<<"\n";
+    cout<<ht.hashSearch(12).value<<"\n";
     
     return 0;
 }

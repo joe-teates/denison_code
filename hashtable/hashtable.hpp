@@ -1,16 +1,27 @@
 
 #pragma once
 
+template<typename V>
+class Item {
+
+    public:
+    V value;
+    int key;
+    bool wasDeleted;
+    bool isNull;
+
+};
+
 
 template<typename V>
 class Hashtable {
 
     
     public:
-    V* table;
+    Item<V>* table;
     int size;
-    
     void printTable();
+    int hash(int key, int probe_i);
     
     Hashtable();
     
@@ -26,9 +37,7 @@ class Hashtable {
     
     void hashDelete(int key);
     
-    V hashSearch(int key);
-    private:
-    int hash(int key, int probe_i);
+    Item<V> hashSearch(int key);
     
 };
 
