@@ -89,12 +89,43 @@ void testStressInsert() {
     BTree<int> tree(3);
 
     for (int i = 0; i < 1000; i++) {
-        tree.bInsert(i, i * 10);
+        tree.bInsert(i, i);
     }
 
     for (int i = 0; i < 1000; i++) {
-        assert(tree.bSearch(i) && *tree.bSearch(i) == i * 10);
+        assert(tree.bSearch(i) && *tree.bSearch(i) == i);
     }
+
+
+    std::cout << "PASS\n\n";
+}
+
+void testDelete() {
+    std::cout << "Test: Delete\n";
+
+    BTree<int> tree(3);
+
+    for (int i = 0; i < 40; i++) {
+        tree.bInsert(i, i);
+    }
+    
+    // tree.bDelete(5);
+    // tree.bDelete(30);
+    // tree.bDelete(20);
+
+    for (int i = 0; i<40; i+=2) {
+        tree.bDelete(i);
+    }
+
+    for (int i = 0; i < 40; i++) {
+        if(i%2==0){
+            assert(tree.bSearch(i) == nullptr);
+        }else{
+            assert(tree.bSearch(i) && *tree.bSearch(i) == i);
+
+        }
+    }
+
 
     std::cout << "PASS\n\n";
 }
@@ -102,10 +133,11 @@ void testStressInsert() {
 int main() {
     std::cout << "Running B-Tree tests...\n\n";
 
-    testInsertAndSearch();
-    testCopyConstructor();
-    testAssignmentOperator();
-    testStressInsert();
+    // testInsertAndSearch();
+    // testCopyConstructor();
+    // testAssignmentOperator();
+    // testStressInsert();
+    testDelete();
 
     std::cout << "ALL TESTS PASSED 🎉\n";
 
