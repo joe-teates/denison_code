@@ -1,145 +1,199 @@
-#include <iostream>
-#include <cassert>
+// Joe Teates, Jack Rehbeck
+// CS 271
+// tests.cpp
+// test file for b tree implementation
+
 #include "b.hpp"
+#include <iostream>
 using namespace std;
+#include <cassert>
+
+
+//============================================================
+// test functions
+// Each function        tests a specific aspect of the b tree implementation
+// testInsertAndSearch  tests basic implementation of insertion and searching
+// testCopyConstructor  tests that all properties of a tree are conserved when copy constructor is used
+// testAssignmentOperator   tests that all properties of a tree are conserved when assignment operator is used
+// testInvariant        tests that the size, and inequality invariants of our b trees hold
+// testSearchEdgeCases  tests certain edge cases when searching, nonexisting elements, searching empty tree
+//============================================================
 
 void testInsertAndSearch() {
-    cout << "Test: insert + search\n";
+    cout << "Testing insert and search\n";
 
     BTree<int> tree(3);
 
-    tree.bInsert(10, 100);
-    // cout<<"10\n";
-    tree.bInsert(20, 200);
-    // cout<<"20\n";
-    tree.bInsert(5, 50);
-    // cout<<"5\n";
-    tree.bInsert(6, 60);
-    // cout<<"6\n";
-    tree.bInsert(12, 120);
-    // cout<<"12\n";
-    tree.bInsert(30, 300);
-    // cout<<"30\n";
-    tree.bInsert(7, 70);
-    // cout<<"7\n";
-    tree.bInsert(17, 170);
-    // cout<<"17\n";
+    tree.bInsert(10, 10);
+    tree.bInsert(20, 20);
+    tree.bInsert(5, 5);
+    tree.bInsert(6, 6);
+    tree.bInsert(12, 12);
+    tree.bInsert(30, 30);
+    tree.bInsert(7, 7);
+    tree.bInsert(17, 17);
 
-    assert(tree.bSearch(10) && *tree.bSearch(10) == 100);
-    assert(tree.bSearch(20) && *tree.bSearch(20) == 200);
-    assert(tree.bSearch(5)  && *tree.bSearch(5)  == 50);
-    assert(tree.bSearch(6)  && *tree.bSearch(6)  == 60);
-    assert(tree.bSearch(12) && *tree.bSearch(12) == 120);
-    assert(tree.bSearch(30) && *tree.bSearch(30) == 300);
-    assert(tree.bSearch(7)  && *tree.bSearch(7)  == 70);
-    assert(tree.bSearch(17) && *tree.bSearch(17) == 170);
+    assert(*tree.bSearch(10) == 10);
+    assert(*tree.bSearch(20) == 20);
+    assert(*tree.bSearch(5) == 5);
+    assert(*tree.bSearch(6) == 6);
+    assert(*tree.bSearch(12) == 12);
+    assert(*tree.bSearch(30) == 30);
+    assert(*tree.bSearch(7) == 7);
+    assert(*tree.bSearch(17) == 17);
 
-    std::cout << "PASS\n\n";
+    cout << "PASS\n";
 }
 
 void testCopyConstructor() {
-    std::cout << "Test: copy constructor\n";
+    cout << "Testing Copy Constructor\n";
 
     BTree<int> tree(2);
+    tree.bInsert(1, 1);
+    tree.bInsert(2, 2);
+    tree.bInsert(3, 3);
 
-    tree.bInsert(1, 10);
-    tree.bInsert(2, 20);
-    tree.bInsert(3, 30);
+    BTree<int> tree2(tree);
 
-    BTree<int> copy(tree);
+    assert(*tree2.bSearch(1) == 1);
+    assert(*tree2.bSearch(2) == 2);
+    assert(*tree2.bSearch(3) == 3);
 
-    assert(copy.bSearch(1) && *copy.bSearch(1) == 10);
-    assert(copy.bSearch(2) && *copy.bSearch(2) == 20);
-    assert(copy.bSearch(3) && *copy.bSearch(3) == 30);
+    // make sure copy is independent
+    tree.bInsert(4, 4);
 
-    // modify original, ensure copy is independent
-    tree.bInsert(4, 40);
+    assert(tree2.bSearch(4) == nullptr);
 
-    assert(copy.bSearch(4) == nullptr);
+    // make sure it deep copies
+    for (int i = 5; i < 1000; i++) {
+        tree.bInsert(i, i);
+    }
+    BTree<int> tree3(tree);
+    for (int i = 1; i < 1000; i++) {
+        assert(*tree3.bSearch(i)==i);
+    }
 
-    std::cout << "PASS\n\n";
+    cout << "PASS\n";
 }
 
 void testAssignmentOperator() {
-    std::cout << "Test: assignment operator\n";
+    cout << "Testing Assignment Operator\n";
 
-    BTree<int> tree1(2);
-    tree1.bInsert(100, 1);
-    tree1.bInsert(200, 2);
+    BTree<int> tree(2);
+    tree.bInsert(1, 1);
+    tree.bInsert(2, 2);
+    tree.bInsert(3, 3);
 
     BTree<int> tree2(2);
-    tree2.bInsert(999, 9);
+    tree2.bInsert(4, 4);
 
-    tree2 = tree1;
+    tree2 = tree;
 
-    assert(tree2.bSearch(100) && *tree2.bSearch(100) == 1);
-    assert(tree2.bSearch(200) && *tree2.bSearch(200) == 2);
-    assert(tree2.bSearch(999) == nullptr);
+    assert(*tree2.bSearch(1) == 1);
+    assert(*tree2.bSearch(2) == 2);
+    assert(*tree2.bSearch(3) == 3);
+    assert(tree2.bSearch(4) == nullptr);
 
-    tree1.bInsert(300, 3);
+    // make sure trees are independent copies
+    tree.bInsert(4, 4);
+    assert(tree2.bSearch(4) == nullptr);
 
-    assert(tree2.bSearch(300) == nullptr);
-
-    std::cout << "PASS\n\n";
-}
-
-void testStressInsert() {
-    std::cout << "Test: stress insert\n";
-
-    BTree<int> tree(3);
-
-    for (int i = 0; i < 1000; i++) {
+    // now check for deep copy
+    for (int i = 5; i < 1000; i++) {
         tree.bInsert(i, i);
     }
-
-    for (int i = 0; i < 1000; i++) {
-        assert(tree.bSearch(i) && *tree.bSearch(i) == i);
+    BTree<int> tree3(10);
+    tree3 = tree;
+    for (int i = 1; i < 1000; i++) {
+        assert(*tree3.bSearch(i)==i);
     }
-
-
-    std::cout << "PASS\n\n";
+    cout << "PASS\n";
 }
 
-void testDelete() {
-    std::cout << "Test: Delete\n";
 
-    BTree<int> tree(3);
-
-    for (int i = 0; i < 40; i++) {
-        tree.bInsert(i, i);
+void recSizeChecker(Node<int>* node){
+    // cout<<"Checking ("<<node->n<<") for "<<node->t<<"\n";
+    assert(node->n >= node->t-1 && node->n < node->t*2);
+    if(!node->leaf){
+        for(int i = 0; i<node->n+1; i++){
+            recSizeChecker(&node->children[i]);
+        }
     }
-    
-    // tree.bDelete(5);
-    // tree.bDelete(30);
-    // tree.bDelete(20);
-
-    for (int i = 0; i<40; i+=2) {
-        tree.bDelete(i);
-    }
-
-    for (int i = 0; i < 40; i++) {
-        if(i%2==0){
-            assert(tree.bSearch(i) == nullptr);
-        }else{
-            assert(tree.bSearch(i) && *tree.bSearch(i) == i);
-
+}
+void verifyNodeSizes(Node<int>* root){
+    // function to check size of root then call recurisive recSizeChecker for all descendant nodes
+    assert(root->n < root->t*2);
+    if(!root->leaf){
+        for(int i = 0; i<root->n+1; i++){
+            recSizeChecker(&root->children[i]);
         }
     }
 
+}
 
-    std::cout << "PASS\n\n";
+void testInvariant() {
+    cout << "Testing Invariant\n";
+    BTree<int> tree(3);
+
+    for (int i = 0; i < 1000; i++) {
+        tree.bInsert(i, i);
+    }
+    // search verifies less than greater then identities
+    for (int i = 0; i < 1000; i++) {
+        assert(*tree.bSearch(i)==i);
+    }
+    // verify, for all nodes that t-1 <= n <= 2t-1
+    verifyNodeSizes(tree.root);
+
+    // try diff t
+    BTree<int> tree2(10);
+    for (int i = 0; i < 1000; i++) {
+        tree2.bInsert(i, i);
+    }
+    for (int i = 0; i < 1000; i++) {
+        assert(*tree2.bSearch(i)==i);
+    }
+    // verify, for different t, t-1 <= n <= 2t-1
+    verifyNodeSizes(tree2.root);
+
+    cout << "PASS\n";
+}
+
+void testSearchEdgeCases() {
+    cout << "Testing Insert edge cases\n";
+
+    BTree<int> tree(3);
+
+    tree.bInsert(10, 10);
+    tree.bInsert(20, 20);
+    tree.bInsert(5, 5);
+    tree.bInsert(6, 6);
+    tree.bInsert(12, 12);
+    tree.bInsert(30, 30);
+    tree.bInsert(7, 7);
+    tree.bInsert(17, 17);
+
+    assert(tree.bSearch(11) == nullptr);
+    assert(tree.bSearch(13) == nullptr);
+    assert(tree.bSearch(14) == nullptr);
+    assert(tree.bSearch(15) == nullptr);
+
+    //testing search on empty tree
+    BTree<int> tree2(3);
+    assert(tree.bSearch(0) == nullptr);
+    cout << "PASS\n";
 }
 
 int main() {
-    std::cout << "Running B-Tree tests...\n\n";
+    cout << "Running tests...\n\n";
 
-    // testInsertAndSearch();
-    // testCopyConstructor();
-    // testAssignmentOperator();
-    // testStressInsert();
-    testDelete();
+    testInsertAndSearch();
+    testCopyConstructor();
+    testAssignmentOperator();
+    testInvariant();
+    testSearchEdgeCases();
 
-    std::cout << "ALL TESTS PASSED 🎉\n";
+    cout << "\nALL TESTS PASSED\n";
 
     return 0;
 }

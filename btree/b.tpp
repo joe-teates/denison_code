@@ -1,28 +1,16 @@
+// Joe Teates, Jack Rehbeck
+// CS 271
+// b.tpp
+// implementation file for our b tree
 
 #include "b.hpp"
 #include <iostream>
+using namespace std;
 
-
-/*
-    int t;
-    int n;
-    int* keys;
-    V* values;
-    bool leaf;
-    Node* parent;
-    Node* children;
-
-    Node(int t, int n, int* keys, V* values, bool leaf, Node* parent, Node* children);
-
-    Node();
-
-    ~Node();
-
-    Node(const Node<V>& node);
-
-    Node<V>& operator=(const Node<V>& node);
-
-*/
+// Node constructor
+// initializes nodes with the values from given parameters. Nodes will contain multiple elements whose
+// keys and values are stored in the keys and values arrays. These arrays, when initialized will be of
+// size 2t-1 and the children array of 2t.
 template<typename V>
 Node<V>::Node(int t, int n, int* keys, V* values, bool leaf, Node* parent, Node* children){
     this->t = t;
@@ -34,6 +22,8 @@ Node<V>::Node(int t, int n, int* keys, V* values, bool leaf, Node* parent, Node*
     this->children = children;
 }
 
+// Node defualt constructor,
+// initializes an empty node with empty arrays and t=0
 template<typename V>
 Node<V>::Node(){
     this->t = 0;
@@ -45,6 +35,8 @@ Node<V>::Node(){
     this->children = nullptr;
 }
 
+// destructor
+// deallocates all data in arrays - worth noting that as children is of type Node*, delete[] is recursive
 template<typename V>
 Node<V>::~Node() {
     delete[] keys;
@@ -52,6 +44,8 @@ Node<V>::~Node() {
     delete[] children;
 }
 
+// Node Copy constructor
+// deep copies data from passed node
 template<typename V>
 Node<V>::Node(const Node<V>& node) {
     t = node.t;
@@ -59,6 +53,7 @@ Node<V>::Node(const Node<V>& node) {
     leaf = node.leaf;
     parent = nullptr;
 
+    //initialize new array and fill
     if (node.keys != nullptr) {
         keys = new int[2 * t - 1];
         for(int i=0; i < n; i++){
@@ -67,7 +62,6 @@ Node<V>::Node(const Node<V>& node) {
     } else {
         keys = nullptr;
     }
-
     if (node.values != nullptr) {
         values = new V[2 * t - 1];
         for (int i=0; i < n; i++) {
@@ -77,6 +71,7 @@ Node<V>::Node(const Node<V>& node) {
         values = nullptr;
     }
 
+    // this is technically a recursive call and deep copies all children's data
     if (node.children != nullptr) {
         children = new Node<V>[2 * t];
         for (int i=0; i <= node.n; i++) {
@@ -87,6 +82,8 @@ Node<V>::Node(const Node<V>& node) {
     }
 }
 
+// Node Assignment operator
+// same as copy constructor, except it deallocates old data
 template<typename V>
 Node<V>& Node<V>::operator=(const Node<V>& node) {
     if (this == &node) return *this;
@@ -130,26 +127,31 @@ Node<V>& Node<V>::operator=(const Node<V>& node) {
     return *this;
 }
 
+// BTree constructor
+// Creates a new btree by initializing its root node with 0 elements and this->t=t
 template<typename V>
 BTree<V>::BTree(int t) {
-    // Node(int t, int n, int* keys, V* values, bool leaf, Node* parent, Node* children)
     this->t = t;
     root = new Node<V>(t, 0, new int[2*t-1], new V[2*t-1], true, nullptr, new Node<V>[2*t]);
 }
 
-
+// BTree default constructor
+// creates empty btree with no root or t
 template<typename V>
 BTree<V>::BTree() {
     t = 0;
     root = nullptr;
 }
-    
-
+   
+// BTree deletion
+// deallocates all data in btree - note that delete root will be recursive as defined earlier
 template<typename V>
 BTree<V>::~BTree() {
     delete root;
 }
 
+// Btree copy constructor
+// deep copies all data from passed valid btree
 template<typename V>
 BTree<V>::BTree(const BTree<V>& btree) {
     t = btree.t;
@@ -160,6 +162,8 @@ BTree<V>::BTree(const BTree<V>& btree) {
     }
 }
 
+//btree assignment operator
+// deallocates previous data and then deep copies data
 template<typename V>
 BTree<V>& BTree<V>::operator=(const BTree<V>& btree) {
     if (this == &btree) return *this;
@@ -174,32 +178,34 @@ BTree<V>& BTree<V>::operator=(const BTree<V>& btree) {
     return *this;
 }
 
-
+// Helper function, splitchild for inserting elements into btree
+// This function works by being given a parent node that is not full
+// and a child at index i that is full (|node_c_i| = 2t-1)
+// it will split this child into two nodes and take the median element 
+// and place it in the parent and shift over all greater elements, doing 
+// the same with the children arary too
 template<typename V>
 static void splitChild(Node<V>* node, int i) {
-    std::cout<<"SPLITTING ";
-    for(int j = 0; j<node->children[i].n; j++){
-        std::cout<<node->children[i].keys[j]<<"  ";
-    }
-    std::cout<<"\n";
-
     int t = node->t;
+    // y is the already existing full node
     Node<V>& y = node->children[i];
+    // z is the new node to be filled
     Node<V> z(t, 0, new int[2*t - 1], new V[2*t - 1], y.leaf, node, new Node<V>[2*t]);
     z.n = t-1;
+    // send over 2nd half of elements
     for(int j=0; j<t-1; j++){
         z.keys[j] = y.keys[j+t];
         z.values[j] = y.values[j+t];
     }
+    // send over kids too
     if(!y.leaf){
         for(int j=0; j<t; j++){
             z.children[j]=y.children[j+t];
         }
     }
     y.n = t-1;
-    // shift over chlidren in X to make room for new child
+    // shift over chlidren in parent to make room for new child
     for(int j = node->n; j>=i+1; j--){
-    for (int j = node->n; j >= i + 1; j--)
         node->children[j+1] = node->children[j];
     }
     node->children[i+1] = z;
@@ -210,25 +216,27 @@ static void splitChild(Node<V>* node, int i) {
     node->keys[i] = y.keys[t-1];
     node->values[i] = y.values[t - 1];
     node->n = node->n+1;
-    // std::cout<<"split done\n";
-
 }
 
-
+// Helper function to insert into nodes that are not full
+// This function, if a given node is a leaf, will insert an element in
+// order at that node, or if it is not a leaf will find the correct subtree
+// to insert at and split it then insert if it is full or just recursively 
+// insert there if not full
 template<typename V>
 static void bInsertNonfull(Node<V>* node, int key, V value) {
     int t = node->t;
     int i = node->n-1;
-    // std::cout<<"current value "<<node->keys[0]<<"\n";
-    // std::cout<<"current is leaf:"<<node->leaf<<"\n";
-    // std::cout<<"ATTEMPTING INSERT AT ";
-    for(int j = 0; j<node->n; j++){
-        std::cout<<node->keys[j]<<"  ";
-    }
-    std::cout<<"\n";
+    // cout<<"current value "<<node->keys[0]<<"\n";
+    // cout<<"current is leaf:"<<node->leaf<<"\n";
+    // cout<<"ATTEMPTING INSERT AT ";
+    // for(int j = 0; j<node->n; j++){
+    //     cout<<node->keys[j]<<"  ";
+    // }
+    // cout<<"\n";
 
     if(node->leaf){
-        // std::cout<<"IS leaf\n";
+        // cout<<"IS leaf\n";
         while (i>=0 && key<node->keys[i]) {
             node->keys[i+1] = node->keys[i];
             node->values[i+1] = node->values[i];
@@ -237,30 +245,30 @@ static void bInsertNonfull(Node<V>* node, int key, V value) {
         node->keys[i+1] = key;
         node->values[i+1] = value;
         node->n = node->n+1;
-        // std::cout<<"New size: "<<node->n<<"\n";
     }else{
-        // std::cout<<"NOT leaf\n";
-        
+        // cout<<"NOT leaf\n";
         while (i>=0 && key<node->keys[i]) {
-            // std::cout<<"Less than "<<node->keys[i]<<"\n";
+            // cout<<"Less than "<<node->keys[i]<<"\n";
             i--;
         }
-        // std::cout<<"Going to child at index: "<<i+1<<"\n";
+        // cout<<"Going to child at index: "<<i+1<<"\n";
         if(node->children[i+1].n == 2*t-1){
             splitChild(node, i+1);
             if(key>node->keys[i+1]){
                 i++;
             }
         }
-        // Node<V>* xci = &(node->children[i]);
         bInsertNonfull(&(node->children[i+1]), key, value);
     }
 }
 
-
+// Insert function
+// This is the main insert function for our btree
+// If the root is full, this function creates a new root, increasing the height of our tree, then
+// splits the old root and inserts from there given that now our root is not full. Otherwise it 
+// just calls the recursive insert at notfull node of the root.
 template<typename V>
 void BTree<V>::bInsert(int key, V value) {
-    std::cout<<"INSERTING ("<<key<<", "<<value<<") ##########\n";
     Node<V>* current = root;
 
     if(current->n == 2*t - 1){
@@ -269,19 +277,17 @@ void BTree<V>::bInsert(int key, V value) {
         root = s;
         s->children[0] = Node<V>(*current);
         splitChild(s, 0);
-        // std::cout<<"split\n";
-        // std::cout<<"\t"<<root->values[0]<<"\n";
-        // std::cout<<root->children[0].n<<"\t"<<root->children[0].values[0]<<"\n";
-        // std::cout<<root->children[1].n<<"\t"<<root->children[1].values[0]<<"\n";
         bInsertNonfull(s, key, value);
     }else{
         bInsertNonfull(current, key, value);
     }
-    // std::cout<<"############################\n\n";
-
 }
 
-
+// Search function
+// This is our searching function for btrees and works by going through our in order list and 
+// finding the element index or child index where our element to search for is. We keep going
+// down the tree until we are at a leaf AND the element is not in the leaf node then return nullptr
+// otherwise we find have found our element along the way and return its value.
 template<typename V>
 V* BTree<V>::bSearch(int key) {
     Node<V>* current = root;
@@ -302,294 +308,15 @@ V* BTree<V>::bSearch(int key) {
     return nullptr;
 }
 
-
-
-
-
-// template<typename V>
-// static void merge(Node<V>* node, int i) {
-//     int t = node->t;
-//     Node<V>& child = node->children[i];
-//     Node<V>& sibling = node->children[i+1];
-
-//     child->keys[t-1] = node->keys[i];
-//     child->values[t-1] = node->values[i];
-
-//     // copy sibling keys into child
-//     for (int j = 0; j < sibling.n; j++) {
-//         child.keys[j+t] = sibling.keys[j];
-//         child.values[j+t] = sibling.values[j];
-//     }
-//     // copy sibling children into child (if not leaf)
-//     if(!sibling->leaf){
-//         for(int j = 0; j<sibling->n+1; j++){
-//             child->children[child->n+j] = sibling->children[j];
-//         }
-//     }
-
-//     // shift x keys left
-//     for(int j = i; j<node->n; j++){
-//         node->keys[j] = node->keys[j+1];
-//         node->values[j] = node->values[j+1];
-//     }
-//     // shift x children left
-//     for(int j = i+1; j<node->n+1; j++){
-//         node->children[j] = node->children[j+1];
-//     }
-    
-//     child->n += sibling->n + 1;
-//     node->n -= 1;
-// }
-
-template<typename V>
-static void merge(Node<V>* node, int i) {
-    int t = node->t;
-
-    Node<V>& child = node->children[i];
-    Node<V>& sibling = node->children[i+1];
-
-    // bring down middle key
-    child.keys[child.n] = node->keys[i];
-    child.values[child.n] = node->values[i];
-
-    // copy sibling keys/values
-    for (int j = 0; j < sibling.n; j++) {
-        child.keys[j + child.n+1] = sibling.keys[j];
-        child.values[j + child.n+1] = sibling.values[j];
-    }
-
-    // copy children
-    if (!child.leaf) {
-        for (int j = 0; j <= sibling.n; j++) {
-            child.children[j + t] = sibling.children[j];
-        }
-    }
-
-    // shift parent keys left
-    for (int j = i; j < node->n - 1; j++) {
-        node->keys[j] = node->keys[j+1];
-        node->values[j] = node->values[j+1];
-    }
-
-    // shift children left
-    for (int j = i+1; j < node->n; j++) {
-        node->children[j] = node->children[j+1];
-    }
-
-    child.n += sibling.n + 1;
-    node->n -= 1;
-}
-
-
-template<typename V>
-static void plump(Node<V>* node, int i){
-    int t = node->t;
-
-    Node<V>& child = node->children[i];
-
-    // borrow from left
-    if (i != 0 && node->children[i-1].n >= t) {
-        Node<V>& sibling = node->children[i-1];
-
-        // shift elements right
-        for (int j = child.n - 1; j >= 0; j--) {
-            child.keys[j+1] = child.keys[j];
-            child.values[j+1] = child.values[j];
-        }
-        //shift children
-        if (!child.leaf) {
-            for (int j = child.n; j >= 0; j--) {
-                child.children[j+1] = child.children[j];
-            }
-        }
-        //bring down
-        child.keys[0] = node->keys[i-1];
-        child.values[0] = node->values[i-1];
-        
-        if (!child.leaf) {
-            child.children[0] = sibling.children[sibling.n];
-        }
-        //bring up
-        node->keys[i-1] = sibling.keys[sibling.n-1];
-        node->values[i-1] = sibling.values[sibling.n-1];
-
-        child.n++;
-        sibling.n--;
-
-    // borrow from right
-    } else if (i != node->n && node->children[i+1].n >= t) {
-        Node<V>& sibling = node->children[i+1];
-
-        child.keys[child.n] = node->keys[i];
-        child.values[child.n] = node->values[i];
-
-        if (!child.leaf) {
-            child.children[child.n + 1] = sibling.children[0];
-        }
-
-        node->keys[i] = sibling.keys[0];
-        node->values[i] = sibling.values[0];
-
-        // shift sibling elements left
-        for (int j = 0; j < sibling.n - 1; j++) {
-            sibling.keys[j] = sibling.keys[j+1];
-            sibling.values[j] = sibling.values[j+1];
-        }
-
-        if (!sibling.leaf) {
-            for (int j = 0; j < sibling.n; j++) {
-                sibling.children[j] = sibling.children[j+1];
-            }
-        }
-
-        child.n++;
-        sibling.n--;
-
-    } else {
-        if (i != node->n) {
-            merge(node, i);
-        } else {
-            merge(node, i-1);
-        }
-    }
-}
-
-template<typename V> 
-static std::pair<int, V> getPredecessor(Node<V>* node, int i){
-    Node<V>* current = &node->children[i];
-    while(!current->leaf){
-        current = &current->children[current->n];
-    }
-    return {current->keys[current->n-1], current->values[current->n-1]};
-}
-
-template<typename V> 
-static std::pair<int, V> getSuccessor(Node<V>* node, int i){
-    Node<V>* current = &node->children[i+1];
-    while(!current->leaf){
-        current = &current->children[0];
-    }
-    return {current->keys[0], current->values[0]};
-}
-template<typename V> 
-static void deleteFromLeaf(Node<V>* node, int i){
-    // shift elements left
-    for(int j = i; j<node->n-1; j++){
-        node->keys[j] = node->keys[j+1];
-        node->values[j] = node->values[j+1];
-    }
-    node->n--;
-}
-
-template<typename V> 
-static void deleteFromNotLeaf(Node<V>* node, int i){
-    int t = node->t;
-    // if predecessor in node >= t size
-    // delete and place it here
-    if(node->children[i].n >=t){
-        auto pred = getPredecessor(node, i);
-        node->keys[i] = pred.first;
-        node->values[i] = pred.second;
-        recDelete(&node->children[i], pred.first);
-    }else if(node->children[i+1].n >=t){
-        // else if successor in node >= t size
-        // delete and place it here
-        auto succ = getSuccessor(node, i);
-        node->keys[i] = succ.first;
-        node->values[i] = succ.second;
-        recDelete(&node->children[i+1], succ.first);
-    } else {
-        // both kids = t-1 -> combine both children into predecessor node WITH current (nodei)
-        // THEN delete(node, i)
-        int k = node->keys[i];
-        merge(node, i);
-        recDelete(&node->children[i], k);
-    }
-}
-
-template<typename V>
-static void recDelete(Node<V>* node, int key) {
-    std::cout<<"ATTEMPTING DELETE ("<<key<<") AT ";
-    for(int j = 0; j<node->n; j++){
-        std::cout<<node->keys[j]<<"  ";
-    }
-    std::cout<<"("<<node->n<<")\n";
-    int i = 0;
-    while (i < node->n && key > node->keys[i]) {
-        i++;
-    }
-    std::cout<<"Key at or child of index "<<i<<"\n";
-    if (i < node->n && node->keys[i] == key) {
-        //found key in node
-        std::cout<<"found key in this node "<<i<<"\n";
-        if (node->leaf) {
-            deleteFromLeaf(node, i);
-        } else {
-            deleteFromNotLeaf(node, i);
-        }
-    } else {
-        //not found but in subtree of child[i]
-        if (node->leaf) {
-            return;
-        }
-
-        int t = node->t;
-
-        if (node->children[i].n < t) {
-            plump(node, i);
-        }
-        if (i > node->n) {
-            recDelete(&node->children[i-1], key);
-        } else {
-            recDelete(&node->children[i], key);
-        }
-    }
-}
-
-template<typename V>
-void BTree<V>::bDelete(int key) {
-    // printTree(root, 0);
-    std::cout<<"DELETE ("<<key<<")\n";
-    
-    recDelete(root, key);
-
-    if(root->n == 0){
-        if(!root->leaf) {
-            root = &(root->children[0]);
-        }
-    }
-    // printTree(root, 0);
-
-    // found key at leaf
-    // if leaf has == t-1 then get immediate neighbor key and replace / shuffle over
-            // shuffle - last/first key of left/right goes over and brings right/left child with it
-            // must shift over all keys/values and children
-        // if immediate neighbors all t-1 then combine left and right with key from parent in middle
-    // if leaf has > t-1 then delete key 
-    
-    // found key at internal node
-
-
-}
-
-
+// Helper function printTree
+// this function was used in testing to help visualize our tree
 template<typename V>
 void printTree(Node<V>* node, int level) {
-/*      print(f'Level {level}', end=": ")
-        for i in x.keys:
-            print(i, end=" ")
-
-        print()
-        level += 1
-
-        if len(x.children) > 0:
-            for i in x.children:
-                self.print_tree(i, level)*/
-    std::cout<<"Level "<<level<<": ";
+    cout<<"Level "<<level<<": ";
     for(int j = 0; j<node->n;j++){
-        std::cout<<node->keys[j]<<" ";
+        cout<<node->keys[j]<<" ";
     }
-    std::cout<<"\n";
+    cout<<"\n";
     if(!node->leaf){
         for(int j = 0; j<node->n+1; j++){
             printTree(&node->children[j], level+1);
