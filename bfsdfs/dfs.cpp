@@ -5,7 +5,7 @@
 using namespace std;
 
 int* path(int** graph, int numNodes, int startNode, int targetNode) {
-    queue<int> working_list;
+    stack<int> working_list;
     bool* visited = new bool[numNodes]();
     int* parents = new int[numNodes];
     for (int i = 0; i < numNodes; i++) {
@@ -16,7 +16,7 @@ int* path(int** graph, int numNodes, int startNode, int targetNode) {
     visited[startNode] = true;
 
     while (!working_list.empty()) {
-        int u = working_list.front();
+        int u = working_list.top();
         working_list.pop();
 
         for (int v = 0; v < numNodes; v++) {
@@ -40,14 +40,14 @@ int* path(int** graph, int numNodes, int startNode, int targetNode) {
         curr = parents[curr];
     }
 
-    int* shortest_path = new int[numNodes];
+    int* found_path = new int[numNodes];
     int i = 0;
 
     while (!path_stack.empty()) {
-        shortest_path[i] = path_stack.top();
+        found_path[i] = path_stack.top();
         path_stack.pop();
         i++;
     }
 
-    return shortest_path;
+    return found_path;
 }
