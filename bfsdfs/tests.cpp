@@ -1,9 +1,19 @@
+// Joe Teates, Theo Wolf, Anthony Le
+// tests.cpp
+// This file contains the code to test the correctness of our bfs and dfs implementations
+// all testing must be valid for both bfs and dfs results
 
 #include "path.hpp"
 #include <iostream>
 #include <cassert>
 using namespace std;
 
+//============================================================
+// test functions
+// checkValidPaths  Validates every path taken on multiple graphs
+// checkDiscGraph   Confirms nullptr returned on graph without possible path
+// checkEdgeCases   tests results of calling path on empty graph
+//============================================================
 
 void checkValidPaths(){
     cout<<"Testing valid edges\n";
@@ -52,9 +62,44 @@ void checkValidPaths(){
     cout<<"Pass\n";
 }
 
-int main(){
+void checkDiscGraph(){
+    cout<<"Testing incomplete path\n";
+    int num_vertices = 15;
+    int** graph = new int*[num_vertices]();
+    for (int i = 0; i < num_vertices; i++) {
+        graph[i] = new int[num_vertices]();
+    }
+    for (int i = 0; i < num_vertices - 1; i++) {
+        // add missing edge
+        if(i!=10){
+            graph[i][i + 1] = 1;
+        }
+    }
+    int* valid_path = path(graph, num_vertices, 0, 14);
+    assert(valid_path==nullptr);
+    cout<<"Pass\n";
+}
 
+void checkEdgeCases(){
+    cout<<"Testing edge cases\n";
+    // try on empty graph
+    int num_vertices = 15;
+    int** graph = new int*[num_vertices]();
+    for (int i = 0; i < num_vertices; i++) {
+        graph[i] = new int[num_vertices]();
+    }
+    int* valid_path = path(graph, num_vertices, 0, 14);
+    assert(valid_path == nullptr);
+    cout<<"Pass\n";
+}
+
+
+int main(){
     // Test that all given transitions are valid edges
     checkValidPaths();
+    // Test that nothing is returned on disconnected graph
+    checkDiscGraph();
+    // Test edge cases (empty graph)
+    checkEdgeCases();
     return 0;
 }
