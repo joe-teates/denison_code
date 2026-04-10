@@ -15,6 +15,7 @@ using namespace std;
 // stack and pops and pushes neighbors to the working stack as a lifo list representaion
 // It is assumed that if this function does not return a nullptr, it returns an array 
 // of length numNodes but only the first n nodes are valid where list[n-1]=targetNode 
+// *Note that nullptr is returned if no path can be found from startNode to targetNode
 int* path(int** graph, int numNodes, int startNode, int targetNode) {
     // using a stack now
     stack<int> working_list;
